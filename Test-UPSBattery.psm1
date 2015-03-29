@@ -50,10 +50,9 @@
         [Int16]
         $BatteryThreshold = 25,
 
-        # If specifed the servers will power off at the battery threshold.
+        # If specified the servers will power off at the battery threshold.
         [Parameter(Mandatory=$false,
                    Position=2)]
-
         [Switch]
         $PowerDownAtThreshold
     )
@@ -62,41 +61,42 @@
     {
         $batteryStatus = Get-CimInstance -ClassName Win32_Battery -Namespace root\cimv2 -ComputerName $ComputerName
         $batteryStatus | ForEach-Object{
-            Get-EventLog -Source Test-UPSBattery -LogName Application -ComputerName $_.PSComputerName -ErrorAction SilentlyContinue | Out-Null
+            Get-EventLog -Source Test-UPSBattery -LogName Application -ComputerName $_.SystemName -ErrorAction SilentlyContinue | Out-Null
             if(-not $?)
             {
-                New-EventLog -Source Test-UPSBattery -LogName Application -ComputerName $_.PSComputerName -ErrorAction SilentlyContinue | Out-Null
+                New-EventLog -Source Test-UPSBattery -LogName Application -ComputerName $_.SystemName -ErrorAction SilentlyContinue | Out-Null
             }
         }
     }
     Process
     {
         $batteryStatus | ForEach-Object{
-            if($_.EstimatedChargeRemaining -le $BatteryThreshold)
+            if($_.EstimatedChargeRemaining -le $BatteryThreshold -and $_.BatteryStatus -eq 1)
+            #A BatteryStatus of 1 represents the battery is discharging.
             {
                 if($PowerDownAtThreshold)
                 {
-                    Invoke-Command -ComputerName $_.PSComputerName -ScriptBlock `
-                    {
-                        Write-EventLog -Source Test-UPSBattery -LogName Application  -EventId 3001 `
-                            -Message "The UPS has initiated a shutdown due to a low battery threshold of $BatteryThreshold percent."; 
-                        Stop-Computer -Force
-                    }
+                    $scriptBlock = $ExecutionContext.InvokeCommand.NewScriptBlock
+                    (
+                        "Write-EventLog -Source Test-UPSBattery -LogName Application -EventId 3001 -Message 'The UPS has initiated a shutdown due to a low battery threshold of $BatteryThreshold percent.';
+                        Stop-Computer"
+                    )
+                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock $scriptBlock
                 }
                 else
                 {
-                    Invoke-Command -ComputerName $_.PSComputerName -ScriptBlock `
-                    {
-                        Write-EventLog -Source Test-UPSBattery -LogName Application  -EventId 3002 `
-                            -Message "The UPS has reached a low battery threshold of $BatteryThreshold percent."
-                    }
+                    $scriptBlock = $ExecutionContext.InvokeCommand.NewScriptBlock
+                    (
+                        "Write-EventLog -Source Test-UPSBattery -LogName Application -EventId 3002 -Message 'The UPS has reached a low battery threshold of $BatteryThreshold percent.'"
+                    )
+                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock $scriptBlock
                 }
             }
         }
     }
     End
     {
-        $batteryNotFound = @((Compare-Object $ComputerName $batteryStatus.PSComputerName -ErrorAction SilentlyContinue).InputObject)
+        $batteryNotFound = @((Compare-Object $ComputerName $batteryStatus.SystemName).InputObject)
         if($batteryNotFound)
         {
             Write-Warning -Message "The following computers do not have any detected UPSs. `n`r$batteryNotFound"
