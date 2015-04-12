@@ -76,21 +76,22 @@
             {
                 if($PowerDownAtThreshold)
                 {
-                    $eventlogParams = @{'source'='Test-UPSBattery';
-                                        'logname'='Application';
-                                        'eventid'='3001';
-                                        'message'="The UPS has initiated a shutdown due to a low battery threshold of $BatteryThreshold percent.";
-                                        }
-                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock {Write-EventLog @eventlogParams; Stop-Computer}
+                    $source = "Test-UPSBattery"
+                    $logName = "Application"
+                    $eventId = 3001
+                    $message = "The UPS has initiated a shutdown due to a low battery threshold of $BatteryThreshold percent."
+                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock {Write-EventLog -Source $source -LogName $logName -EventId $eventId -Message $message;
+                        Get-VM | Stop-VM -Force; Stop-Computer} `
+                            -ArgumentList
                 }
                 else
                 {
-                    $eventlogParams = @{'source'='Test-UPSBattery';
-                                        'logname'='Application';
-                                        'eventid'='3001';
-                                        'message'="The UPS has reached a low battery threshold of $BatteryThreshold percent.";
-                                        }
-                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock {Write-EventLog @eventlogParams}
+                    $source = "Test-UPSBattery"
+                    $logName = "Application"
+                    $eventId = 3002
+                    $message = "The UPS has reached a low battery threshold of $BatteryThreshold percent."
+                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock {Write-EventLog -Source $source -LogName $logName -EventId $eventId -Message $message} `
+                        -ArgumentList $source $logName $eventId $message
                 }
             }
         }
