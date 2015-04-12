@@ -76,20 +76,21 @@
             {
                 if($PowerDownAtThreshold)
                 {
-                    $scriptBlock = $ExecutionContext.InvokeCommand.NewScriptBlock
-                    (
-                        "Write-EventLog -Source Test-UPSBattery -LogName Application -EventId 3001 -Message 'The UPS has initiated a shutdown due to a low battery threshold of $BatteryThreshold percent.';
-                        Stop-Computer"
-                    )
-                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock $scriptBlock
+                    $eventlogParams = @{'source'='Test-UPSBattery';
+                                        'logname'='Application';
+                                        'eventid'='3001';
+                                        'message'="The UPS has initiated a shutdown due to a low battery threshold of $BatteryThreshold percent.";
+                                        }
+                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock {Write-EventLog $eventlogParams; Stop-Computer}
                 }
                 else
                 {
-                    $scriptBlock = $ExecutionContext.InvokeCommand.NewScriptBlock
-                    (
-                        "Write-EventLog -Source Test-UPSBattery -LogName Application -EventId 3002 -Message 'The UPS has reached a low battery threshold of $BatteryThreshold percent.'"
-                    )
-                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock $scriptBlock
+                    $eventlogParams = @{'source'='Test-UPSBattery';
+                                        'logname'='Application';
+                                        'eventid'='3001';
+                                        'message'="The UPS has reached a low battery threshold of $BatteryThreshold percent.";
+                                        }
+                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock {Write-EventLog $eventlogParams}
                 }
             }
         }
