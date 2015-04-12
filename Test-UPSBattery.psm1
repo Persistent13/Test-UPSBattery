@@ -81,7 +81,7 @@
                                         'eventid'='3001';
                                         'message'="The UPS has initiated a shutdown due to a low battery threshold of $BatteryThreshold percent.";
                                         }
-                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock {Write-EventLog $eventlogParams; Stop-Computer}
+                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock {Write-EventLog @eventlogParams; Stop-Computer}
                 }
                 else
                 {
@@ -90,7 +90,7 @@
                                         'eventid'='3001';
                                         'message'="The UPS has reached a low battery threshold of $BatteryThreshold percent.";
                                         }
-                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock {Write-EventLog $eventlogParams}
+                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock {Write-EventLog @eventlogParams}
                 }
             }
         }
