@@ -81,7 +81,7 @@
                     $eventId = 3001
                     $message = "The UPS has initiated a shutdown due to a low battery threshold of $BatteryThreshold percent."
                     Invoke-Command -ComputerName $_.SystemName -ScriptBlock {Write-EventLog -Source $args[0] -LogName $args[1] -EventId $args[2] -Message $args[3];
-                        Get-VM | Stop-VM -Force; Stop-Computer} `
+                        Get-VM | Stop-VM -Force; Stop-Computer -Force} `
                             -ArgumentList @($source,$logName,$eventId,$message)
                 }
                 else
