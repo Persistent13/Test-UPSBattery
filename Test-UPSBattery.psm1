@@ -80,9 +80,9 @@
                     $logName = "Application"
                     $eventId = 3001
                     $message = "The UPS has initiated a shutdown due to a low battery threshold of $BatteryThreshold percent."
-                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock {Write-EventLog -Source $source -LogName $logName -EventId $eventId -Message $message;
+                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock {Write-EventLog -Source $args[0] -LogName $args[1] -EventId $args[2] -Message $args[3];
                         Get-VM | Stop-VM -Force; Stop-Computer} `
-                            -ArgumentList $source $logName $eventId $message
+                            -ArgumentList @($source,$logName,$eventId,$message)
                 }
                 else
                 {
@@ -90,8 +90,8 @@
                     $logName = "Application"
                     $eventId = 3002
                     $message = "The UPS has reached a low battery threshold of $BatteryThreshold percent."
-                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock {Write-EventLog -Source $source -LogName $logName -EventId $eventId -Message $message} `
-                        -ArgumentList $source $logName $eventId $message
+                    Invoke-Command -ComputerName $_.SystemName -ScriptBlock {Write-EventLog -Source $args[0] -LogName $args[1] -EventId $args[2] -Message $args[3]} `
+                        -ArgumentList @($source,$logName,$eventId,$message)
                 }
             }
         }
